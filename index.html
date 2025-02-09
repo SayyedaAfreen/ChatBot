@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Eva - The Chatbot</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: pink;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            width: 100vw;
+            margin: 0;
+        }
+        .chatbox {
+            width: 100%;
+            height: 100%;
+            background: pink;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+        .chatbox-header {
+            background-color: black;
+            color: white;
+            padding: 15px;
+            text-align: center;
+            font-size: 20px;
+            border-top-left-radius: 8px;
+            border-top-right-radius: 8px;
+        }
+        .chatbox-body {
+            padding: 15px;
+            flex: 1;
+            overflow-y: auto; /* Allow vertical scrolling */
+            border-bottom: 1px solid #ffffff;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+            align-items: flex-start;
+            position: relative;
+        }
+        .chatbox-input {
+            display: flex;
+            border-top: 1px solid #ffffff;
+            border-radius: 20px;
+            padding: 20px;
+        }
+        .chatbox-input input {
+            width: 100%;
+            padding: 10px;
+            border-radius: 25px;
+            border: 1px solid #000000;
+            outline: none;
+        }
+        .chatbox-input button {
+            padding: 10px;
+            background-color: black;
+            color: #fff;
+            border-radius: 25px;
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .chatbox-input button svg {
+            width: 16px;
+            height: 16px;
+        }
+        .clear-chat {
+            background-color: black;
+            color: white;
+            border: none;
+            padding: 10px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .clear-chat svg {
+            width: 16px;
+            height: 16px;
+        }
+        .message {
+            display: flex;
+            margin-bottom: 10px;
+            width: 100%;
+        }
+        .message.user {
+            justify-content: flex-end;
+        }
+        .message.bot {
+            justify-content: flex-start;
+        }
+        .message-text {
+            max-width: 80%;
+            padding: 10px;
+            border-radius: 10px;
+        }
+        .message.user .message-text {
+            background-color: #d1e7ff;
+            text-align: left;
+        }
+        .message.bot .message-text {
+            background-color: #e2e2e2;
+            text-align: left;
+        }
+        .intro-text {
+            text-align: center;
+            color: #555;
+            margin-top: 20px;
+            font-size: 18px;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+        .intro-text p {
+            font-weight: 300;
+            font-size: 22px;
+            margin: 0;
+            padding: 5px;
+        }
+        .intro-text .features {
+            text-align: justify;
+            margin-top: 20px;
+            padding-left: 100px;
+            padding-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="chatbox">
+        <div class="chatbox-header">Eva - The Chatbot</div>
+        <div class="chatbox-body" id="chatbox-body">
+            <div id="intro-text" class="intro-text">
+                <p style="font-size: 50px; font-weight: 500; color: red; font-family: Georgia, 'Times New Roman', Times, serif;">Welcome to Eva - The Chatbot!</p>
+                <div class="features">
+                    <p style="color: black; font-weight: 800; font-family: Georgia, 'Times New Roman', Times, serif; text-align: center;">Key Features:</p>
+                    <p>Answer your queries in real-time.</p>
+                    <p>Provide detailed information on various topics.</p>
+                    <p>24/7 availability.</p>
+                </div>
+            </div>
+        </div>
+        <div class="chatbox-input">
+            <button class="clear-chat" onclick="clearChat()">
+                <svg viewBox="0 0 24 24">
+                    <path fill="#fff" d="M9 3V4H4V6H5V20A1 1 0 0 0 6 21H18A1 1 0 0 0 19 20V6H20V4H15V3H9M7 6H17V19H7V6M9 8V17H11V8H9M13 8V17H15V8H13Z" />
+                </svg>
+            </button>
+            <input type="text" id="user-input" placeholder="Type a message..." onkeydown="handleKeyDown(event)">
+            <button onclick="sendMessage()">
+                <svg viewBox="0 0 24 24">
+                    <path fill="#fff" d="M2,21L23,12L2,3V10L17,12L2,14V21Z" />
+                </svg>
+            </button>
+        </div>
+    </div>
+    <script>
+        function sendMessage() {
+            const userInput = document.getElementById('user-input');
+            const message = userInput.value.trim();
+            if (message) {
+                const chatboxBody = document.getElementById('chatbox-body');
+                const introText = document.getElementById('intro-text');
+                if (introText) {
+                    introText.style.display = 'none';
+                }
+                const userMessageDiv = document.createElement('div');
+                userMessageDiv.className = 'message user';
+                const userMessageText = document.createElement('div');
+                userMessageText.className = 'message-text';
+                userMessageText.textContent = message;
+                userMessageDiv.appendChild(userMessageText);
+                chatboxBody.appendChild(userMessageDiv);
+                userInput.value = '';
+                chatboxBody.scrollTop = chatboxBody.scrollHeight;
+
+                fetch('/get_response', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ message: message }),
+                })
+                .then(response => response.json())
+                .then(data => {
+                    const botMessageDiv = document.createElement('div');
+                    botMessageDiv.className = 'message bot';
+                    const botMessageText = document.createElement('div');
+                    botMessageText.className = 'message-text';
+                    botMessageText.textContent = data.response;
+                    botMessageDiv.appendChild(botMessageText);
+                    chatboxBody.appendChild(botMessageDiv);
+                    chatboxBody.scrollTop = chatboxBody.scrollHeight;
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                });
+            }
+        }
+
+        function handleKeyDown(event) {
+            if (event.key === 'Enter') {
+                event.preventDefault(); // Prevent default behavior (form submission)
+                sendMessage(); // Call sendMessage function
+            }
+        }
+
+        function clearChat() {
+            const chatboxBody = document.getElementById('chatbox-body');
+            chatboxBody.innerHTML = '';
+            const introText = document.createElement('div');
+            introText.id = 'intro-text';
+            introText.className = 'intro-text';
+            introText.innerHTML = `
+                <p style="font-size: 50px; font-weight: 500; color: #dc3545; font-family: Georgia, 'Times New Roman', Times, serif;">Welcome to Eva - The Chatbot!</p>
+                <div class="features">
+                    <p style="color: #007bff; font-weight: 800; font-family: Georgia, 'Times New Roman', Times, serif; text-align: center;">Key Features:</p>
+                    <p>Answer your queries in real-time.</p>
+                    <p>Provide detailed information on various topics.</p>
+                    <p>24/7 availability.</p>
+                </div>`;
+            chatboxBody.appendChild(introText);
+        }
+    </script>
+</body>
+</html>
